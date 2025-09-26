@@ -87,9 +87,20 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Validate inputs
+      if (!email || !email.trim()) {
+        toast.error('Email is required')
+        return { error: new Error('Email is required') }
+      }
+      
+      if (!password || !password.trim()) {
+        toast.error('Password is required')
+        return { error: new Error('Password is required') }
+      }
+
       setIsLoading(true)
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       })
       
@@ -194,24 +205,4 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-// Demo login function for development (matches existing demo users)
-export const loginWithDemo = async (role: 'admin' | 'pm' | 'client' | 'sarah' | 'alex') => {
-  const demoCredentials = {
-    admin: { email: 'admin@nexaflow.com', password: 'demo123' },
-    pm: { email: 'pm@nexaflow.com', password: 'demo123' },
-    client: { email: 'client@nexaflow.com', password: 'demo123' },
-    sarah: { email: 'sarah@nexaflow.com', password: 'demo123' },
-    alex: { email: 'alex@nexaflow.com', password: 'demo123' }
-  }
-
-  const credentials = demoCredentials[role]
-  
-  const { error } = await supabase.auth.signInWithPassword({
-    email: credentials.email,
-    password: credentials.password,
-  })
-
-  return { error }
 }

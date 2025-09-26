@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/SupabaseAuthContext';
-import { loginWithDemo } from '../../context/SupabaseAuthContext';
+import toast from 'react-hot-toast';
 
 const SupabaseLoginForm: React.FC = () => {
   const { signIn, signUp, isLoading } = useAuth();
@@ -18,9 +18,31 @@ const SupabaseLoginForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!email.trim()) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    
+    if (!password.trim()) {
+      toast.error('Please enter your password');
+      return;
+    }
+    
     if (isSignUp) {
+      if (!firstName.trim() || !lastName.trim()) {
+        toast.error('Please enter your first and last name');
+        return;
+      }
+      
       if (password !== confirmPassword) {
-        return; // Handle password mismatch
+        toast.error('Passwords do not match');
+        return;
+      }
+      
+      if (password.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        return;
       }
       
       await signUp(email, password, {
@@ -38,46 +60,18 @@ const SupabaseLoginForm: React.FC = () => {
         id: '' // Will be set by Supabase
       });
     } else {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+      
       await signIn(email, password);
     }
   };
 
-  const handleDemoLogin = async (demoRole: 'admin' | 'pm' | 'client' | 'sarah' | 'alex') => {
-    await loginWithDemo(demoRole);
-  };
 
-  const demoUsers = [
-    {
-      role: 'admin' as const,
-      name: 'Admin User',
-      description: 'Full system access, analytics, and team management',
-      color: 'bg-red-50 border-red-200 text-red-700'
-    },
-    {
-      role: 'pm' as const,
-      name: 'Project Manager',
-      description: 'Create projects, assign tasks, manage team workflows',
-      color: 'bg-blue-50 border-blue-200 text-blue-700'
-    },
-    {
-      role: 'sarah' as const,
-      name: 'Sarah Wilson (Team Member)',
-      description: 'Frontend developer - can only see assigned tasks',
-      color: 'bg-purple-50 border-purple-200 text-purple-700'
-    },
-    {
-      role: 'alex' as const,
-      name: 'Alex Chen (Team Member)',
-      description: 'Backend developer - can only see assigned tasks',
-      color: 'bg-indigo-50 border-indigo-200 text-indigo-700'
-    },
-    {
-      role: 'client' as const,
-      name: 'Client User',
-      description: 'View project progress and communicate with team',
-      color: 'bg-green-50 border-green-200 text-green-700'
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -95,34 +89,7 @@ const SupabaseLoginForm: React.FC = () => {
             <p className="text-gray-600 mt-2">Actually helps you finish things</p>
           </div>
 
-          {/* Demo Login Section */}
-          <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Demo Access</h3>
-            <div className="space-y-2">
-              {demoUsers.map((user) => (
-                <button
-                  key={user.role}
-                  onClick={() => handleDemoLogin(user.role)}
-                  className={`w-full text-left p-3 rounded-lg border transition-colors hover:shadow-md ${user.color}`}
-                  disabled={isLoading}
-                >
-                  <div className="font-medium">{user.name}</div>
-                  <div className="text-xs opacity-75">{user.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
-            </div>
-          </div>
-
-          {/* Regular Login/Signup Form */}
+          {/* Login/Signup Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <>
@@ -199,6 +166,8 @@ const SupabaseLoginForm: React.FC = () => {
                   className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter your password"
                   required
+                  minLength={1}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
