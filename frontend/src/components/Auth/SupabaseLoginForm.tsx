@@ -14,23 +14,6 @@ const SupabaseLoginForm: React.FC = () => {
   const [role, setRole] = useState<'admin' | 'project_manager' | 'team_member' | 'client'>('team_member');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Production user accounts in display order
-  const productionUsers = [
-    { email: 'admin@nexaflow.com', password: 'NexaFlow2025!Admin', name: 'System Administrator', role: 'admin' },
-    { email: 'pm@nexaflow.com', password: 'NexaFlow2025!PM', name: 'Project Manager', role: 'project_manager' },
-    { email: 'senior.dev@nexaflow.com', password: 'NexaFlow2025!Senior', name: 'Senior Developer', role: 'team_member' },
-    { email: 'frontend.dev@nexaflow.com', password: 'NexaFlow2025!Frontend', name: 'Frontend Developer', role: 'team_member' },
-    { email: 'backend.dev@nexaflow.com', password: 'NexaFlow2025!Backend', name: 'Backend Developer', role: 'team_member' },
-    { email: 'designer@nexaflow.com', password: 'NexaFlow2025!Design', name: 'UI/UX Designer', role: 'team_member' },
-    { email: 'qa@nexaflow.com', password: 'NexaFlow2025!QA', name: 'QA Engineer', role: 'team_member' },
-    { email: 'devops@nexaflow.com', password: 'NexaFlow2025!DevOps', name: 'DevOps Engineer', role: 'team_member' }
-  ];
-
-  const handleQuickLogin = (user: typeof productionUsers[0]) => {
-    setEmail(user.email);
-    setPassword(user.password);
-  };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,35 +88,6 @@ const SupabaseLoginForm: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Welcome to NexaFlow</h1>
             <p className="text-gray-600 mt-2">Actually helps you finish things</p>
           </div>
-
-          {/* Quick Login - Production Users */}
-          {!isSignUp && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="text-sm font-medium text-blue-900 mb-3">Quick Login - Production Users</h3>
-              <div className="space-y-2">
-                {productionUsers.map((user, index) => (
-                  <button
-                    key={user.email}
-                    onClick={() => handleQuickLogin(user)}
-                    className="w-full text-left px-3 py-2 bg-white rounded-md border border-blue-200 hover:bg-blue-50 transition-colors text-sm"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-blue-900">{user.name}</div>
-                        <div className="text-blue-600 text-xs">{user.email}</div>
-                      </div>
-                      <div className="text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded">
-                        {index + 1}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-blue-700 mt-2 text-center">
-                Click any user to auto-fill login credentials
-              </p>
-            </div>
-          )}
 
           {/* Login/Signup Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
