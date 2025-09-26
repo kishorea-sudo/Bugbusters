@@ -28,6 +28,7 @@ import { FileText, Users, MessageCircle, Settings, BarChart3 } from 'lucide-reac
 function AppContent() {
   const { user, isLoading } = useAuth();
   const { projects, activities, updateDeliverableStatus } = useProjects();
+  
   const [activeView, setActiveView] = useState('dashboard');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
@@ -46,11 +47,11 @@ function AppContent() {
   
   // Team members state
   const [teamMembers, setTeamMembers] = useState([
-    { id: '1', name: 'Sarah Wilson', role: 'Frontend Developer', status: 'Active', avatar: '/api/placeholder/40/40', projects: 3, tasks: 12, email: 'sarah@nexaflow.com', phone: '+1 234-567-8901', department: 'Engineering', skills: 'React, TypeScript, CSS' },
-    { id: '2', name: 'Alex Chen', role: 'Backend Developer', status: 'Active', avatar: '/api/placeholder/40/40', projects: 2, tasks: 8, email: 'alex@nexaflow.com', phone: '+1 234-567-8902', department: 'Engineering', skills: 'Node.js, Python, MongoDB' },
-    { id: '3', name: 'Mike Johnson', role: 'UI/UX Designer', status: 'Active', avatar: '/api/placeholder/40/40', projects: 4, tasks: 15, email: 'mike@nexaflow.com', phone: '+1 234-567-8903', department: 'Design', skills: 'Figma, Adobe XD, Sketch' },
-    { id: '4', name: 'Emma Davis', role: 'QA Engineer', status: 'Away', avatar: '/api/placeholder/40/40', projects: 2, tasks: 6, email: 'emma@nexaflow.com', phone: '+1 234-567-8904', department: 'QA', skills: 'Selenium, Jest, Cypress' },
-    { id: '5', name: 'John Smith', role: 'Project Manager', status: 'Active', avatar: '/api/placeholder/40/40', projects: 8, tasks: 25, email: 'john@nexaflow.com', phone: '+1 234-567-8905', department: 'Management', skills: 'Agile, Scrum, Leadership' }
+    { id: '1', name: 'Sarah Wilson', role: 'Frontend Developer', status: 'Active', avatar: 'https://images.pexels.com/photos/3768911/pexels-photo-3768911.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2', projects: 3, tasks: 12, email: 'sarah@nexaflow.com', phone: '+1 234-567-8901', department: 'Engineering', skills: 'React, TypeScript, CSS' },
+    { id: '2', name: 'Alex Chen', role: 'Backend Developer', status: 'Active', avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2', projects: 2, tasks: 8, email: 'alex@nexaflow.com', phone: '+1 234-567-8902', department: 'Engineering', skills: 'Node.js, Python, MongoDB' },
+    { id: '3', name: 'Mike Johnson', role: 'UI/UX Designer', status: 'Active', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2', projects: 4, tasks: 15, email: 'mike@nexaflow.com', phone: '+1 234-567-8903', department: 'Design', skills: 'Figma, Adobe XD, Sketch' },
+    { id: '4', name: 'Emma Davis', role: 'QA Engineer', status: 'Away', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2', projects: 2, tasks: 6, email: 'emma@nexaflow.com', phone: '+1 234-567-8904', department: 'QA', skills: 'Selenium, Jest, Cypress' },
+    { id: '5', name: 'John Smith', role: 'Project Manager', status: 'Active', avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2', projects: 8, tasks: 25, email: 'john@nexaflow.com', phone: '+1 234-567-8905', department: 'Management', skills: 'Agile, Scrum, Leadership' }
   ]);
   
   const [rules, setRules] = useState<Rule[]>([
@@ -316,7 +317,15 @@ function AppContent() {
               {teamMembers.map((member) => (
                 <div key={member.id} className="bg-white p-6 rounded-lg border border-gray-200">
                   <div className="flex items-center space-x-3 mb-4">
-                    <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full bg-gray-200" />
+                    <img 
+                      src={member.avatar} 
+                      alt={member.name} 
+                      className="w-10 h-10 rounded-full bg-gray-200 object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=6366f1&color=fff&size=40`;
+                      }}
+                    />
                     <div>
                       <h3 className="font-semibold text-gray-900">{member.name}</h3>
                       <p className="text-sm text-gray-600">{member.role}</p>

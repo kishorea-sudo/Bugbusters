@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Search, 
@@ -11,6 +11,9 @@ import {
   Users,
   X
 } from 'lucide-react';
+import { db } from '../../lib/supabase';
+import { useAuth } from '../../context/SupabaseAuthContext';
+import toast from 'react-hot-toast';
 
 interface Task {
   id: string;
@@ -30,89 +33,75 @@ interface Task {
 }
 
 const TaskManagement: React.FC = () => {
+  const { profile } = useAuth();
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Mock team members
-  const teamMembers = [
-    { id: '4', name: 'Sarah Wilson', email: 'sarah@nexaflow.com', avatar: 'https://images.pexels.com/photos/3768911/pexels-photo-3768911.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2' },
-    { id: '5', name: 'Alex Chen', email: 'alex@nexaflow.com', avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2' },
-  ];
-
-  // Mock projects
-  const projects = [
-    { id: 'proj-1', name: 'E-commerce Platform' },
-    { id: 'proj-2', name: 'Mobile Banking App' },
-    { id: 'proj-3', name: 'CRM System' },
-  ];
-
-  // Mock tasks
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: 'task-1',
-      title: 'Implement User Authentication',
-      description: 'Create login and registration functionality with JWT tokens',
-      projectId: 'proj-1',
-      projectName: 'E-commerce Platform',
-      assigneeId: '4',
-      assigneeName: 'Sarah Wilson',
-      status: 'in-progress',
-      priority: 'high',
-      dueDate: new Date('2025-10-05'),
-      estimatedHours: 12,
-      actualHours: 8,
-      tags: ['Frontend', 'Security'],
-      createdAt: new Date('2025-09-20')
-    },
-    {
-      id: 'task-2',
-      title: 'Design Database Schema',
-      description: 'Create ERD and implement database tables for product management',
-      projectId: 'proj-1',
-      projectName: 'E-commerce Platform',
-      assigneeId: '4',
-      assigneeName: 'Sarah Wilson',
-      status: 'todo',
-      priority: 'medium',
-      dueDate: new Date('2025-10-08'),
-      estimatedHours: 6,
-      tags: ['Backend', 'Database'],
-      createdAt: new Date('2025-09-21')
-    },
-    {
-      id: 'task-3',
-      title: 'API Integration Testing',
-      description: 'Write unit tests for payment gateway integration',
-      projectId: 'proj-2',
-      projectName: 'Mobile Banking App',
-      assigneeId: '5',
-      assigneeName: 'Alex Chen',
-      status: 'review',
-      priority: 'high',
-      dueDate: new Date('2025-09-30'),
-      estimatedHours: 8,
-      actualHours: 7,
-      tags: ['Testing', 'API'],
-      createdAt: new Date('2025-09-18')
-    },
-    {
-      id: 'task-4',
-      title: 'UI/UX Implementation',
-      description: 'Implement responsive dashboard components',
-      projectId: 'proj-3',
-      projectName: 'CRM System',
-      assigneeId: '5',
-      assigneeName: 'Alex Chen',
-      status: 'completed',
-      priority: 'medium',
-      dueDate: new Date('2025-09-25'),
-      estimatedHours: 10,
-      actualHours: 12,
-      tags: ['Frontend', 'UI'],
-      createdAt: new Date('2025-09-15')
+  // Load data on component mount
+  useEffect(() => {
+    if (profile) {
+      loadData();
     }
-  ]);
+  }, [profile]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load team members
+      const { data: teamData, error: teamError } = await db.getTeamMembers();
+      if (teamError) throw teamError;
+      setTeamMembers(teamData || []);
+
+      // Load projects (assuming PM can see all their assigned projects)
+      const { data: projectData, error: projectError } = await db.getProjects();
+      if (projectError) throw projectError;
+      
+      // Filter projects assigned to this PM
+      const myProjects = projectData?.filter(p => p.project_manager_id === profile?.id) || [];
+      setProjects(myProjects);
+
+      // Load all tasks for projects assigned to this PM
+      const { data: taskData, error: taskError } = await db.getTasks();
+      if (taskError) throw taskError;
+      
+      // Filter tasks for projects this PM manages
+      const myProjectIds = myProjects.map(p => p.id);
+      const myTasks = taskData?.filter(t => myProjectIds.includes(t.project_id)) || [];
+      
+      // Transform the data to match the Task interface
+      const transformedTasks = myTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        projectId: task.project_id,
+        projectName: task.projects?.name || 'Unknown Project',
+        assigneeId: task.assignee_id,
+        assigneeName: task.assignee ? `${task.assignee.first_name} ${task.assignee.last_name}` : 'Unassigned',
+        status: task.status,
+        priority: task.priority,
+        dueDate: new Date(task.due_date),
+        estimatedHours: task.estimated_hours || 0,
+        actualHours: task.actual_hours || 0,
+        tags: task.tags || [],
+        createdAt: new Date(task.created_at)
+      }));
+      
+      setTasks(transformedTasks);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   const [newTask, setNewTask] = useState({
     title: '',
@@ -153,40 +142,64 @@ const TaskManagement: React.FC = () => {
     return matchesFilter && matchesSearch;
   });
 
-  const handleCreateTask = () => {
-    if (!newTask.title || !newTask.projectId || !newTask.assigneeId) return;
+  const handleCreateTask = async () => {
+    if (!newTask.title || !newTask.projectId || !newTask.assigneeId || !profile) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
-    const project = projects.find(p => p.id === newTask.projectId);
-    const assignee = teamMembers.find(m => m.id === newTask.assigneeId);
+    try {
+      const taskData = {
+        title: newTask.title,
+        description: newTask.description,
+        project_id: newTask.projectId,
+        assignee_id: newTask.assigneeId,
+        created_by: profile.id,
+        status: 'todo',
+        priority: newTask.priority,
+        due_date: newTask.dueDate,
+        estimated_hours: newTask.estimatedHours,
+        tags: newTask.tags,
+        created_at: new Date().toISOString()
+      };
 
-    const task: Task = {
-      id: `task-${Date.now()}`,
-      title: newTask.title,
-      description: newTask.description,
-      projectId: newTask.projectId,
-      projectName: project?.name || '',
-      assigneeId: newTask.assigneeId,
-      assigneeName: assignee?.name || '',
-      status: 'todo',
-      priority: newTask.priority,
-      dueDate: new Date(newTask.dueDate),
-      estimatedHours: newTask.estimatedHours,
-      tags: newTask.tags,
-      createdAt: new Date()
-    };
+      const { data, error } = await db.createTask(taskData);
+      
+      if (error) throw error;
 
-    setTasks(prev => [...prev, task]);
-    setNewTask({
-      title: '',
-      description: '',
-      projectId: '',
-      assigneeId: '',
-      priority: 'medium',
-      dueDate: '',
-      estimatedHours: 1,
-      tags: []
-    });
-    setShowCreateTask(false);
+      if (data) {
+        // Create notification for assignee
+        await db.createNotification({
+          user_id: newTask.assigneeId,
+          title: 'New Task Assignment',
+          message: `You have been assigned: ${newTask.title}`,
+          type: 'task_assignment',
+          project_id: newTask.projectId,
+          task_id: data.id,
+          is_read: false,
+          created_at: new Date().toISOString()
+        });
+
+        toast.success('Task created successfully!');
+        loadData(); // Reload data to show the new task
+        
+        // Reset form
+        setNewTask({
+          title: '',
+          description: '',
+          projectId: '',
+          assigneeId: '',
+          priority: 'medium',
+          dueDate: '',
+          estimatedHours: 1,
+          tags: []
+        });
+        setShowCreateTask(false);
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('Failed to create task');
+    }
   };
 
   const stats = [
@@ -326,9 +339,16 @@ const TaskManagement: React.FC = () => {
 
         {/* Task List */}
         <div className="p-6">
-          <div className="grid gap-4">
-            {filteredTasks.map((task) => (
-              <div key={task.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading tasks...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4">
+              {filteredTasks.map((task) => (
+                <div key={task.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
@@ -376,16 +396,23 @@ const TaskManagement: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredTasks.length === 0 && (
-            <div className="text-center py-12">
-              <CheckSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
-              <p className="text-gray-600">No tasks match the selected filter or search criteria.</p>
+                </div>
+              ))}
             </div>
+
+            {filteredTasks.length === 0 && (
+              <div className="text-center py-12">
+                <CheckSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
+                <p className="text-gray-600">
+                  {tasks.length === 0 
+                    ? 'No tasks created yet. Create your first task to get started.' 
+                    : 'No tasks match the selected filter or search criteria.'
+                  }
+                </p>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>

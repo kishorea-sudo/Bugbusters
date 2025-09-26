@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Eye, 
   X, 
@@ -11,6 +11,9 @@ import {
   Users,
   ChevronRight
 } from 'lucide-react';
+import { useAuth } from '../../context/SupabaseAuthContext';
+import * as db from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 interface ClientRequest {
   id: string;
@@ -28,70 +31,87 @@ interface ClientRequest {
 }
 
 const AdminRequestManagement: React.FC = () => {
-  const [selectedFilter, setSelectedFilter] = useState('submitted');
-  const [selectedRequest, setSelectedRequest] = useState<ClientRequest | null>(null);
+  const { profile } = useAuth();
+  const [selectedFilter, setSelectedFilter] = useState('pending');
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [projectManagers, setProjectManagers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock PMs
-  const projectManagers = [
-    { id: '3', name: 'John Smith', email: 'pm@nexaflow.com', workload: 3, avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2' },
-    { id: '6', name: 'Emily Davis', email: 'emily@nexaflow.com', workload: 2, avatar: 'https://images.pexels.com/photos/3768911/pexels-photo-3768911.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2' },
-  ];
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  // Mock client requests
-  const [requests, setRequests] = useState<ClientRequest[]>([
-    {
-      id: 'req-1',
-      clientId: '2',
-      clientName: 'ABC Corp',
-      title: 'Add Payment Gateway Integration',
-      description: 'We need to integrate PayPal and Stripe payment gateways to our e-commerce platform for better customer experience.',
-      priority: 'high',
-      requestType: 'feature',
-      estimatedBudget: 5000,
-      desiredDeliveryDate: new Date('2025-10-15'),
-      status: 'assigned-to-pm',
-      assignedPMId: '3',
-      createdAt: new Date('2025-09-20')
-    },
-    {
-      id: 'req-2',
-      clientId: '2',
-      clientName: 'ABC Corp',
-      title: 'Fix Shopping Cart Bug',
-      description: 'Items are not being properly added to cart when clicked multiple times rapidly.',
-      priority: 'critical',
-      requestType: 'bug-fix',
-      desiredDeliveryDate: new Date('2025-10-01'),
-      status: 'submitted',
-      createdAt: new Date('2025-09-22')
-    },
-    {
-      id: 'req-3',
-      clientId: '6',
-      clientName: 'Tech Solutions Ltd',
-      title: 'Mobile App Performance Optimization',
-      description: 'The mobile app is loading slowly. Need performance improvements and optimization.',
-      priority: 'medium',
-      requestType: 'enhancement',
-      estimatedBudget: 3000,
-      desiredDeliveryDate: new Date('2025-11-01'),
-      status: 'under-review',
-      createdAt: new Date('2025-09-24')
-    },
-    {
-      id: 'req-4',
-      clientId: '7',
-      clientName: 'Startup Inc',
-      title: 'User Dashboard Analytics',
-      description: 'Add comprehensive analytics dashboard for users to track their business metrics.',
-      priority: 'high',
-      requestType: 'feature',
-      estimatedBudget: 8000,
-      desiredDeliveryDate: new Date('2025-11-15'),
-      status: 'submitted',
-      createdAt: new Date('2025-09-25')
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load client requests
+      const { data: requestData, error: requestError } = await db.getClientRequests();
+      if (requestError) throw requestError;
+      setRequests(requestData || []);
+
+      // Load project managers
+      const { data: pmData, error: pmError } = await db.getProjectManagers();
+      if (pmError) throw pmError;
+      setProjectManagers(pmData || []);
+
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  const assignToProjectManager = async (requestId: string, pmId: string) => {
+    try {
+      // Update request status and assign PM
+      const { error: updateError } = await db.updateClientRequest(requestId, {
+        status: 'assigned_to_pm',
+        assigned_pm_id: pmId,
+        updated_at: new Date().toISOString()
+      });
+
+      if (updateError) throw updateError;
+
+      // Create notification for PM
+      await db.createNotification({
+        user_id: pmId,
+        title: 'New Project Assignment',
+        message: `You have been assigned a new project request.`,
+        type: 'project_assignment',
+        request_id: requestId,
+        is_read: false,
+        created_at: new Date().toISOString()
+      });
+
+      toast.success('Request assigned to Project Manager!');
+      
+      // Reload data
+      loadData();
+      
+    } catch (error) {
+      console.error('Error assigning request:', error);
+      toast.error('Failed to assign request');
+    }
+  };
+
+  // Filter requests based on selected filter instead of using mock data
+  const filteredRequests = requests.filter(request => {
+    if (selectedFilter === 'all') return true;
+    return request.status === selectedFilter;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -124,10 +144,6 @@ const AdminRequestManagement: React.FC = () => {
     ));
     setSelectedRequest(null);
   };
-
-  const filteredRequests = requests.filter(request => 
-    selectedFilter === 'all' || request.status === selectedFilter
-  );
 
   const stats = [
     {

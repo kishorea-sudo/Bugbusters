@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckSquare, 
   Clock, 
@@ -11,52 +11,63 @@ import {
   Pause,
   CheckCircle
 } from 'lucide-react';
+import { db } from '../../lib/supabase';
+import { useAuth } from '../../context/SupabaseAuthContext';
+import toast from 'react-hot-toast';
 
 const TeamMemberDashboard: React.FC = () => {
+  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('tasks');
+  const [myTasks, setMyTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for assigned tasks (only for this team member)
-  const myTasks = [
-    {
-      id: 'task-1',
-      title: 'Implement User Authentication',
-      description: 'Create login and registration functionality with JWT tokens',
-      project: 'E-commerce Platform',
-      status: 'in-progress',
-      priority: 'high',
-      dueDate: new Date('2025-10-05'),
-      estimatedHours: 12,
-      actualHours: 8,
-      assignedBy: 'John Smith',
-      tags: ['Frontend', 'Security']
-    },
-    {
-      id: 'task-2',
-      title: 'Design Database Schema',
-      description: 'Create ERD and implement database tables for product management',
-      project: 'E-commerce Platform', 
-      status: 'todo',
-      priority: 'medium',
-      dueDate: new Date('2025-10-08'),
-      estimatedHours: 6,
-      actualHours: 0,
-      assignedBy: 'John Smith',
-      tags: ['Backend', 'Database']
-    },
-    {
-      id: 'task-3',
-      title: 'API Integration Testing',
-      description: 'Write unit tests for payment gateway integration',
-      project: 'Mobile Banking App',
-      status: 'review',
-      priority: 'high',
-      dueDate: new Date('2025-09-30'),
-      estimatedHours: 8,
-      actualHours: 7,
-      assignedBy: 'John Smith',
-      tags: ['Testing', 'API']
+  // Load tasks assigned to this team member
+  useEffect(() => {
+    console.log('TeamMemberDashboard - Profile:', profile);
+    if (profile?.id) {
+      loadMyTasks();
     }
-  ];
+  }, [profile]);
+
+  const loadMyTasks = async () => {
+    if (!profile?.id) return;
+
+    try {
+      setLoading(true);
+      console.log('Loading tasks for profile ID:', profile.id);
+      
+      const { data, error } = await db.getTasksByAssignee(profile.id);
+      
+      console.log('Tasks data:', data);
+      console.log('Tasks error:', error);
+      
+      if (error) throw error;
+      
+      // Transform data to match component expectations
+      const transformedTasks = data?.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        project: task.projects?.name || 'Unknown Project',
+        status: task.status,
+        priority: task.priority,
+        dueDate: new Date(task.due_date),
+        estimatedHours: task.estimated_hours || 0,
+        actualHours: task.actual_hours || 0,
+        assignedBy: task.creator ? `${task.creator.first_name} ${task.creator.last_name}` : 'Unknown',
+        tags: task.tags || []
+      })) || [];
+      
+      setMyTasks(transformedTasks);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      toast.error('Failed to load tasks');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -233,20 +244,34 @@ const TeamMemberDashboard: React.FC = () => {
         </div>
 
         <div className="p-6">
-          <div className="grid gap-6">
-            {myTasks
-              .filter(task => activeTab === 'all' || task.status === activeTab)
-              .map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-          </div>
-
-          {myTasks.filter(task => activeTab === 'all' || task.status === activeTab).length === 0 && (
+          {loading ? (
             <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
-              <p className="text-gray-600">No tasks match the selected filter.</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your tasks...</p>
             </div>
+          ) : (
+            <>
+              <div className="grid gap-6">
+                {myTasks
+                  .filter(task => activeTab === 'all' || task.status === activeTab)
+                  .map((task) => (
+                    <TaskCard key={task.id} task={task} />
+                  ))}
+              </div>
+
+              {myTasks.filter(task => activeTab === 'all' || task.status === activeTab).length === 0 && (
+                <div className="text-center py-12">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
+                  <p className="text-gray-600">
+                    {myTasks.length === 0 
+                      ? 'No tasks have been assigned to you yet.' 
+                      : 'No tasks match the selected filter.'
+                    }
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

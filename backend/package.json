@@ -1,0 +1,29 @@
+{
+  "name": "nexaflow-backend",
+  "version": "1.0.0",
+  "description": "NexaFlow Backend - Supabase PostgreSQL Database",
+  "main": "server.js",
+  "scripts": {
+    "setup": "echo 'Run the SQL files in your Supabase dashboard'",
+    "deploy": "echo 'Deploy schema to Supabase'",
+    "seed": "echo 'Run sample data in Supabase SQL Editor'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kishorea-sudo/nexaflow-backend.git"
+  },
+  "keywords": [
+    "supabase",
+    "postgresql",
+    "database",
+    "project-management",
+    "backend"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
