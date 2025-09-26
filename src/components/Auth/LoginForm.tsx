@@ -7,7 +7,7 @@ const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedDemo, setSelectedDemo] = useState<'admin' | 'pm' | 'client'>('admin');
+  const [selectedDemo, setSelectedDemo] = useState<'admin' | 'pm' | 'client' | 'sarah' | 'alex'>('admin');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +16,9 @@ const LoginForm: React.FC = () => {
     const demoCredentials = {
       admin: 'admin@nexaflow.com',
       pm: 'pm@nexaflow.com', 
-      client: 'client@nexaflow.com'
+      client: 'client@nexaflow.com',
+      sarah: 'sarah@nexaflow.com',
+      alex: 'alex@nexaflow.com'
     };
     
     await login(email || demoCredentials[selectedDemo], password || 'demo123');
@@ -32,8 +34,20 @@ const LoginForm: React.FC = () => {
     {
       role: 'pm' as const,
       name: 'Project Manager',
-      description: 'Create projects, upload files, manage workflows',
+      description: 'Create projects, assign tasks, manage team workflows',
       color: 'bg-blue-50 border-blue-200 text-blue-700'
+    },
+    {
+      role: 'sarah' as const,
+      name: 'Sarah Wilson (Team Member)',
+      description: 'Frontend developer - can only see assigned tasks',
+      color: 'bg-purple-50 border-purple-200 text-purple-700'
+    },
+    {
+      role: 'alex' as const,
+      name: 'Alex Chen (Team Member)',
+      description: 'Backend developer - can only see assigned tasks',
+      color: 'bg-indigo-50 border-indigo-200 text-indigo-700'
     },
     {
       role: 'client' as const,
@@ -48,8 +62,12 @@ const LoginForm: React.FC = () => {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">N</span>
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/logo.png" 
+                alt="NexaFlow" 
+                className="h-16 w-auto"
+              />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Welcome to NexaFlow</h1>
             <p className="text-gray-600 mt-2">Actually helps you finish things</p>

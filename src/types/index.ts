@@ -2,10 +2,11 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'pm' | 'client';
+  role: 'admin' | 'pm' | 'client' | 'member';
   avatar?: string;
   createdAt: Date;
   lastActive: Date;
+  assignedToProjects?: string[]; // For team members
 }
 
 export interface Project {
@@ -77,6 +78,89 @@ export interface Milestone {
   dueDate: Date;
   status: 'pending' | 'in-progress' | 'completed' | 'overdue';
   deliverableIds: string[];
+}
+
+export interface ClientRequest {
+  id: string;
+  clientId: string;
+  clientName: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  requestType: 'feature' | 'bug-fix' | 'enhancement' | 'support';
+  estimatedBudget?: number;
+  desiredDeliveryDate: Date;
+  attachments?: string[];
+  status: 'submitted' | 'under-review' | 'approved' | 'assigned-to-pm' | 'in-progress' | 'completed' | 'rejected';
+  assignedAdminId?: string;
+  assignedPMId?: string;
+  comments: Comment[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Task {
+  id: string;
+  projectId: string;
+  clientRequestId?: string; // Links back to original client request
+  title: string;
+  description: string;
+  assigneeId: string;
+  assignedBy: string;
+  assignedToRole: 'pm' | 'member'; // Whether assigned to PM or team member
+  status: 'todo' | 'in-progress' | 'review' | 'completed';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  dueDate: Date;
+  estimatedHours?: number;
+  actualHours?: number;
+  tags?: string[];
+  attachments?: string[];
+  comments: Comment[];
+  parentTaskId?: string; // For subtasks created by PM
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TaskUpdate {
+  id: string;
+  taskId: string;
+  taskTitle: string;
+  projectId: string;
+  projectName: string;
+  teamMemberId: string;
+  teamMemberName: string;
+  updateType: 'progress' | 'completed' | 'blocked' | 'review-ready';
+  previousStatus: string;
+  newStatus: string;
+  progressPercentage?: number;
+  description: string;
+  attachments?: string[];
+  hoursWorked?: number;
+  nextSteps?: string;
+  blockers?: string;
+  createdAt: Date;
+  reviewedByPM: boolean;
+  sentToClient: boolean;
+  clientFeedback?: string;
+}
+
+export interface PMClientCommunication {
+  id: string;
+  projectId: string;
+  projectName: string;
+  clientId: string;
+  pmId: string;
+  subject: string;
+  messageType: 'task-update' | 'milestone-complete' | 'issue-report' | 'approval-request' | 'general';
+  content: string;
+  taskUpdates?: TaskUpdate[];
+  attachments?: string[];
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'sent' | 'read' | 'responded';
+  clientResponse?: string;
+  responseDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Comment {

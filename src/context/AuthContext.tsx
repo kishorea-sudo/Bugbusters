@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, _password: string) => {
     setIsLoading(true);
     
     // Simulate API call
@@ -58,6 +58,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
         createdAt: new Date(),
         lastActive: new Date(),
+      };
+    } else if (email.includes('sarah')) {
+      demoUser = {
+        id: '4',
+        email: email,
+        name: 'Sarah Wilson',
+        role: 'member',
+        avatar: 'https://images.pexels.com/photos/3768911/pexels-photo-3768911.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+        createdAt: new Date(),
+        lastActive: new Date(),
+        assignedToProjects: ['proj-1', 'proj-2']
+      };
+    } else if (email.includes('alex')) {
+      demoUser = {
+        id: '5',
+        email: email,
+        name: 'Alex Chen',
+        role: 'member',
+        avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+        createdAt: new Date(),
+        lastActive: new Date(),
+        assignedToProjects: ['proj-1', 'proj-3']
       };
     } else {
       demoUser = {

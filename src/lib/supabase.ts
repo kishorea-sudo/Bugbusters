@@ -5,6 +5,22 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Type definitions
+export interface Profile {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: 'admin' | 'project_manager' | 'team_member' | 'client';
+  phone: string | null;
+  avatar_url: string | null;
+  department: string | null;
+  skills: string[] | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Database helper functions
 export const db = {
   // Projects

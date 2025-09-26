@@ -1,31 +1,84 @@
-# NexaFlow - Project Management & Approval Workflow Platform
+# NexaFlow - Project Management Platform
 
-> Actually helps you finish things
+A comprehensive project management platform built with React, TypeScript, and Supabase. Features role-based access control, real-time collaboration, task management, time tracking, and client portal.
 
-## 🚀 Quick Start
+## 🚀 Features
 
-1. **Clone and Install**
+- **Role-Based Access Control**: Admin, Project Manager, Team Member, Client roles
+- **Project Management**: Create, track, and manage projects with teams  
+- **Task Management**: Assign tasks, track progress, set deadlines
+- **Time Tracking**: Log billable hours with detailed descriptions
+- **Real-time Collaboration**: Live updates and notifications
+- **Client Portal**: Dedicated client view with document access
+- **Team Management**: Add team members, manage permissions
+- **Document Management**: Upload and share project documents
+- **Analytics Dashboard**: Project insights and performance metrics
+- **AI-Powered Reports**: Generate intelligent project reports
+
+## �️ Tech Stack
+
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS  
+- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
+- **Icons**: Lucide React
+- **Charts**: Recharts
+- **Notifications**: Sonner
+
+## 🎯 Quick Start
+
+### 1. Clone and Install
+
 ```bash
 git clone <repository-url>
 cd nexaflow
 npm install
 ```
 
-2. **Environment Setup**
+### 2. Set Up Supabase
+
+1. **Create Supabase Project**
+   - Go to [Supabase](https://app.supabase.com/)
+   - Create a new project
+   - Note your project URL and anon key
+
+2. **Set Up Database**
+   - Open your Supabase project dashboard
+   - Go to SQL Editor
+   - Copy and run the contents of `supabase-schema.sql`
+
+3. **Create Demo Users**
+   - Go to Authentication > Users in Supabase dashboard
+   - Create these users manually:
+     ```
+     admin@nexaflow.com (password: demo123) - Admin access
+     pm@nexaflow.com (password: demo123) - Project Manager
+     sarah@nexaflow.com (password: demo123) - Team Member
+     alex@nexaflow.com (password: demo123) - Team Member  
+     client@nexaflow.com (password: demo123) - Client access
+     ```
+
+4. **Add Sample Data**
+   - Update user IDs in `supabase-sample-data.sql`
+   - Run the sample data script
+
+### 3. Configure Environment
+
 ```bash
-cp .env.example .env
-# Edit .env with your API keys
+# Copy environment template
+cp .env.example .env.local
+
+# Edit .env.local with your Supabase credentials
+VITE_SUPABASE_URL=https://your-project-id.supabase.co  
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-3. **Database Setup**
-- Create a new Supabase project
-- Run the SQL schema from `supabase-schema.sql`
-- Update VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+### 4. Start Development Server
 
-4. **Start Development**
 ```bash
 npm run dev
 ```
+
+Visit http://localhost:5173 and log in with any demo user!
 
 ## 📋 **IMPLEMENTATION STATUS**
 
